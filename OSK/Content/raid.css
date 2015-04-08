@@ -1,0 +1,68 @@
+﻿.data-block {
+    background: white; 
+    height: 32px; 
+    width: 105px; 
+    border-radius: 5px;
+    position: absolute; 
+    display: none;
+    padding: 5px;
+    font-size: 16px;
+    font-weight: 700;
+    z-index: 2;
+}
+
+.disk-image {
+    position: absolute;
+    height: 280px; 
+    width: 150px; 
+    z-index: 1;
+    display: none;
+    top: 0;
+    left: 0;
+}
+
+.disk-image-cross {
+    position: absolute;
+    height: 280px; 
+    width: 150px; 
+    z-index: 2;
+    display: none;
+    top: 0;
+    left: 0;
+}
+
+.parity-block {
+    height: 32px; 
+    width: 105px; 
+    border-radius: 5px;
+    position: absolute; 
+    display: none;
+    padding: 5px;
+    font-size: 16px;
+    font-weight: 700;
+    z-index: 2;
+	
+	background-color: red;
+	top: 50px;
+	left: 550px;
+}
+#diskArrayTitle {
+    position: absolute;
+}
+
+.blockrows{
+  position: absolute;
+}
+
+.mirrored-block {
+    background: green; 
+    height: 32px; 
+    width: 105px; 
+    border-radius: 5px;
+    position: absolute; 
+    display: none;
+    padding: 5px;
+    font-size: 16px;
+    font-weight: 700;
+    z-index: 2;
+}

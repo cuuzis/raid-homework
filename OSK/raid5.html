@@ -1,0 +1,281 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>RAID 5</title>
+    <link href="Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="Content/raid.css" rel="stylesheet" />
+</head>
+<body style="background-color: #F8F8FF">
+    <div class="container">
+        <br />
+        <div class="well">
+            <h1>Choose a specific RAID level!</h1>
+            <div class="btn-group btn-group-lg" role="group" aria-label="...">
+                <a role="button" class="btn btn-default" href="./raid0.html">0</a>
+                <a role="button" class="btn btn-default" href="./raid1.html">1</a>
+				<a role="button" class="btn btn-default" href="./raid2.html">2</a>
+				<a role="button" class="btn btn-default" href="./raid3.html">3</a>
+				<a role="button" class="btn btn-default" href="./raid4.html">4</a>
+				<button type="button" class="btn btn-default active">5</button>
+				<a role="button" class="btn btn-default" href="./raid6.html">6</a>
+            </div>
+        </div>
+        <hr />
+        <h1>RAID 5</h1>
+        <div class="well" style="min-height: 600px;">
+            <div class="row">
+                <div class="col-md-1">
+					<div style="position: absolute; width:500px; height: 200px; left: 350px;top: -10px;border: 2px;border-style: dashed;border-color: blue;"> </div>
+					<h3 style="position: absolute; left: 860px;">RAID controller</h3>
+					
+                    <img src="Content/Images/server.png" height="200" width="128" />
+                    <h3>Server</h3>
+                </div>  
+                <div class="col-md-3 blockrows" id="data-blocks1"></div>
+				<div class="col-md-3 blockrows" id="data-blocks2"></div>
+				<div class="col-md-3 blockrows" id="data-blocks3"></div>
+				<div class="col-md-3 blockrows" id="data-blocks4"></div>
+            </div>  
+            <div class="row">
+                <div class="col-md-12" id="disk-images"></div>
+            </div>     
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+				<button type="button" id="write" class="btn btn-primary btn-lg">Write</button>
+                <button type="button" id="read" class="btn btn-primary btn-lg">Read</button>
+				<button type="button" id="failure" class="btn btn-primary btn-lg">Disk failure</button>
+                <button type="button" id="reload" class="btn btn-default btn-lg">Reload page</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="Scripts/jquery-2.1.3.min.js"></script>
+    <script src="Scripts/bootstrap.min.js"></script>
+    <script type="text/javascript">
+		// Reverse plugin
+		jQuery.fn.reverse = [].reverse;
+		
+		//constants
+		var diskSpacing = 200;
+		var diskCount = 4;
+		var dataBlockCount = 3;
+		var animationDuration = 700;
+		
+		$( document ).ready ( function () {
+			// Izveido diskus
+            var diskImages = [];
+			for (var i = 0; i < diskCount; i++) {
+                diskImages.push("di" + i);
+            }
+			
+			for (var i = 0; i < diskImages.length; i++) {
+                $("#disk-images").append('<img src="Content/Images/disk.png" id="' + diskImages[i] + '" class="disk-image" />');
+            }
+			
+            $("#disk-images").append('<h3 id="diskArrayTitle">Disk array</h3>');
+			
+			var leftImage = 200;
+            $('#disk-images img').each(function (i, elem) {
+                $(elem)
+                    .show()
+                    .animate({ left: leftImage + 'px' }, "fast");
+
+                leftImage += diskSpacing;
+            });
+			$('#diskArrayTitle')
+                .animate({ left: '520px' }, "fast")
+                .animate({ top: '265px' }, "fast");
+        });
+		
+		
+        $("#write").click(function () {
+			var delaysForRows = 1500;
+            WriteDataBlocks( animationDuration, 1);
+			window.setTimeout(function() {WriteDataBlocks(animationDuration,2);}, delaysForRows);
+			window.setTimeout(function() {WriteDataBlocks(animationDuration,3);}, delaysForRows*2);
+			window.setTimeout(function() {WriteDataBlocks(animationDuration,4);}, delaysForRows*3);
+        });
+		
+		$("#read").click(function () {
+            WriteDataBlocks(0, 1);
+			WriteDataBlocks(0, 2);
+			WriteDataBlocks(0, 3);
+			WriteDataBlocks(0, 4);
+			window.setTimeout(function() {
+				ReadDataBlocks(animationDuration, 1); 
+				window.setTimeout(function() {ReadDataBlocks(animationDuration, 2); } , animationDuration*2 );
+				window.setTimeout(function() {ReadDataBlocks(animationDuration, 3); } , animationDuration*3 );
+				window.setTimeout(function() {ReadDataBlocks( animationDuration, 4); } , animationDuration*4 );
+				window.setTimeout(function() {SendDataToServer(animationDuration, 1);} , animationDuration*5 );
+				window.setTimeout(function() {SendDataToServer(animationDuration, 2);} , animationDuration*6 );
+				window.setTimeout(function() {SendDataToServer(animationDuration, 3);} , animationDuration*7 );
+				window.setTimeout(function() {SendDataToServer(animationDuration, 4);} , animationDuration*8 );
+			}, animationDuration * 2);
+        });
+		
+		$("#failure").click(function () {
+            WriteDataBlocks(0, 1);
+			WriteDataBlocks(0, 2);
+			WriteDataBlocks(0, 3);
+			WriteDataBlocks(0, 4);
+			RuinDisk(0);
+			HideDataBlocks(1);
+			window.setTimeout(function() {
+				ReadDataBlocks(animationDuration, 1);//Hidden blocks too
+				ReadParity(animationDuration, 1);
+				window.setTimeout(function() {ReadDataBlocks(animationDuration, 2); ReadParity(animationDuration, 2);} , animationDuration*2 );
+				window.setTimeout(function() {ReadDataBlocks(animationDuration, 3); ReadParity(animationDuration, 3);} , animationDuration*3 );
+				window.setTimeout(function() {ReadDataBlocks(animationDuration, 4); ReadParity(animationDuration, 4);} , animationDuration*4 );
+				window.setTimeout(function() {SendDataToServer(animationDuration, 1); HideParity(1); ShowDataBlocks(1);} , animationDuration*5 );
+				window.setTimeout(function() {SendDataToServer(animationDuration, 2); HideParity(2); ShowDataBlocks(2);} , animationDuration*6 );
+				window.setTimeout(function() {SendDataToServer(animationDuration, 3); HideParity(3); ShowDataBlocks(3);} , animationDuration*7 );
+				window.setTimeout(function() {SendDataToServer(animationDuration, 4); HideParity(4); ShowDataBlocks(4);} , animationDuration*8 );
+			}, animationDuration * 4);
+			window.setTimeout(function() {FixDisk(0);}, animationDuration * 14);
+        });
+
+        $("#reload").click(function () {
+            location.reload(true);
+        });
+		
+		function WriteDataBlocks(duration, lineNr) {
+			if( $('#D3').length ) {
+				 return;
+			}
+			
+            var dataBlocks = [];
+				
+			var letter = "";
+			switch(lineNr){
+			case 1:
+				letter = "A";
+				break;
+			case 2:
+				letter = "B";
+				break;
+			case 3:
+				letter = "C";
+				break;
+			case 4:
+				letter = "D";
+				break;
+			}
+			
+			dataBlocks.push(letter + "1");
+			dataBlocks.push(letter + "2");
+			dataBlocks.push(letter + "3");
+			
+            for (var i = 0; i < dataBlocks.length; i++) {
+                $("#data-blocks"+lineNr).append('<div id="' + dataBlocks[i] + '" class="data-block" style="top:'+i*40+'px">' + dataBlocks[i] + '</div>');
+            }
+            
+			//Blocks go to controller
+			$('#data-blocks'+lineNr+' div').each(function (i, elem) {
+                $(elem)
+                    .show()
+                    .animate({ left: '400px' }, duration);
+            });
+			
+			
+			window.setTimeout(function() {
+				//Controller creates parity or mirror blocks
+				$("#data-blocks"+lineNr).append('<div class="parity-block">P'+letter+'</div>');
+				$("#data-blocks"+lineNr+" div.parity-block").show();
+			},duration);
+            
+			
+			window.setTimeout(function() {
+				var left = 220;
+				
+				//Data blocks go to disk
+				var topSpacing = (lineNr*50 + 250)+'px';
+				
+				$("#data-blocks"+lineNr+" div.data-block").each(function (i, elem) {
+					if (i === (lineNr-1)) {
+						left += diskSpacing; // Empty diagonal
+					};
+					$(elem)
+						.animate({ top: '200px' }, duration)
+						.animate({ left: left + 'px' }, duration)
+						.animate({ top: topSpacing }, duration);
+						
+					left += diskSpacing;
+				});
+				
+				left = 220 + (diskSpacing * (lineNr-1));
+				// Parity blocks go to disk
+				$("#data-blocks"+lineNr+" div.parity-block").each(function (i, elem) {
+					$(elem)
+						.animate({ top: '200px' }, duration)
+						.animate({ left: left + 'px' }, duration)
+						.animate({ top: topSpacing }, duration);
+				});
+			},duration*2);
+			
+		};
+		
+		function ReadDataBlocks(duration, lineNr) {
+			//Data blocks go to controller											
+			$('#data-blocks' + lineNr + ' div.data-block').each(function (i, elem) {
+                $(elem)
+                    .animate({ top: '200px' }, duration)
+                    .animate({ left: (250 + ((lineNr) * 115)) +'px' }, duration)
+					.animate({ top: i*40+'px' }, duration);
+            });
+		};
+		
+		function ReadParity(duration, lineNr) {
+			//Parity blocks go to controller		
+			$('#data-blocks' + lineNr + ' div.parity-block').each(function (i, elem) {
+                $(elem)
+                    .animate({ top: '200px' }, duration)
+                    .animate({ left: (250 + ((lineNr) * 115)) +'px' }, duration)
+					.animate({ top: i*40+'px' }, duration);
+            });
+		};
+		
+		function SendDataToServer(duration, lineNr) {
+			$('#data-blocks' + lineNr + ' div.data-block').each(function (i, elem) {
+                $(elem).animate({ left: '100px' }, duration);
+            });
+			
+			setTimeout(function () {
+		        $('#data-blocks' + lineNr + ' div.data-block').each(function (i, elem) {
+		            $(elem).remove();
+		        });
+				HideParity(lineNr);
+		    }, animationDuration*2);
+		};
+		
+		function RuinDisk(index) {
+			$("#di" + index).attr("src","Content/Images/diskX.png");
+		};
+		function FixDisk(index) {
+			$("#di" + index).attr("src","Content/Images/disk.png");
+		};
+		
+		function HideDataBlocks(lineNr) {
+		HideParity(lineNr);
+			window.setTimeout(function() {HideParity(lineNr); }, 0 );//execution order = wtf
+			$('#B1').hide();
+			$('#C1').hide();
+			$('#D1').hide();
+		};
+		
+		function ShowDataBlocks(lineNr) {
+			$('#B1').show();
+			$('#C1').show();
+			$('#D1').show();
+		};
+		
+		function HideParity(lineNr) {		
+			$('#data-blocks' + lineNr + ' div.parity-block').each(function (i, elem) {
+                $(elem).remove();
+            });
+		};
+		
+		
+    </script>
+</body>
+</html>
